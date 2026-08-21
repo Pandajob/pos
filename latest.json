@@ -1,8 +1,8 @@
 {
-    "version":  "2026.08.21.5",
-    "released":  "2026-08-21",
-    "notes":  "แก้ลำดับการเขียน update-source.txt ให้ติดไปกับก้อนอัพเดท",
-    "zip":  "https://raw.githubusercontent.com/Pandajob/pos/main/releases/pos-update-2026.08.21.5.zip",
-    "sha256":  "958e257039e02252f1a6fd7e84a41fbd07c0f99cd4d96d418cf043896187816d",
+    "version":  "2026.08.21.6",
+    "released":  "2026-08-22",
+    "notes":  "เอกสารติดตั้งเครื่องร้าน",
+    "zip":  "https://raw.githubusercontent.com/Pandajob/pos/main/releases/pos-update-2026.08.21.6.zip",
+    "sha256":  "580b2743f6b135f0e64dcb5b24f4b2be3897f463ac0457f9335b5a0a60791996",
     "count":  868
 }
