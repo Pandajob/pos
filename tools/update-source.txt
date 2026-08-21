@@ -6,3 +6,4 @@
 #
 # ยังไม่ได้ตั้งค่า = อัพเดทผ่านเน็ตไม่ได้ แต่ยังติดตั้งจากไฟล์ได้เสมอ:
 #   .\update-pos.ps1 -Package "D:\pos-update-xxxx.zip"
+https://raw.githubusercontent.com/Pandajob/pos/main/latest.json

@@ -1,0 +1,8 @@
+{
+    "version":  "2026.08.21.4",
+    "released":  "2026-08-21",
+    "notes":  "ระบบอัพเดทอัตโนมัติ + แก้ใบเสร็จ A4 + ปรับความเร็ว",
+    "zip":  "https://raw.githubusercontent.com/Pandajob/pos/main/releases/pos-update-2026.08.21.4.zip",
+    "sha256":  "cdb7190222fa31fdaca76e55f68c17b1f37405d8fcd9c6e6809154e0fdd5de76",
+    "count":  868
+}

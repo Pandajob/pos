@@ -31,6 +31,7 @@ local-agent/config.json
 
 /dist/
 /backup/
+# releases/ = ก้อนอัพเดทที่ส่งให้เครื่องร้านโหลด -> ต้องขึ้น repo
 *.bak-*
 *.log
 

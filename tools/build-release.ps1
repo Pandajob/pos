@@ -43,7 +43,7 @@ if (-not $Version) {
 # local-agent = โปรแกรมพิมพ์ที่รันแยกเป็น .exe ของมันเอง (Electron หลายพันไฟล์)
 # ทับตอนมันกำลังรันอยู่ไม่ได้ และทับไปก็ไม่มีผลจนกว่าจะ build ใหม่ -> อัพเดทแยกต่างหาก
 $excludeDirs = @(
-    '.git', 'dist', 'backup', 'writable', 'public\uploads',
+    '.git', 'dist', 'backup', 'releases', 'writable', 'public\uploads',
     'node_modules', 'tests', '.claude', 'local-agent'
 )
 # ไฟล์ dump มีรหัสผ่าน (hash) พนักงาน ข้อมูลลูกค้า และ agent_token
@@ -142,14 +142,36 @@ if (-not $ZipUrlBase) {
         $remote = (& git remote get-url origin 2>$null)
         Pop-Location
         if ($remote -and $remote -match 'github\.com[:/](?<owner>[^/]+)/(?<repo>[^/.\s]+)') {
-            $repoSlug   = "$($Matches.owner)/$($Matches.repo)"
-            $ZipUrlBase = "https://github.com/$repoSlug/releases/download"
+            # ตั้งแค่ repoSlug พอ — ห้ามตั้ง ZipUrlBase ที่นี่
+            # ไม่งั้นจะไปเข้าโหมด GitHub Releases (ที่ต้องอัปโหลดเอง) แทนโหมดวางไฟล์ในรีโป
+            $repoSlug = "$($Matches.owner)/$($Matches.repo)"
             Write-Host "  อ่าน repo จาก git remote: $repoSlug" -ForegroundColor DarkGray
         }
     } catch { }
 }
 
-$zipUrl = if ($ZipUrlBase) { "$($ZipUrlBase.TrimEnd('/'))/v$Version/$zipName" } else { "<<ใส่ลิงก์ไฟล์ zip ตรงนี้>>" }
+if ($ZipUrlBase) {
+    # โหมด GitHub Releases — ต้องอัปโหลดไฟล์ zip เองที่หน้าเว็บ
+    $zipUrl = "$($ZipUrlBase.TrimEnd('/'))/v$Version/$zipName"
+} elseif ($repoSlug) {
+    # โหมดปกติ: ก๊อป zip เข้าโฟลเดอร์ releases\ ในรีโปเลย
+    # push ครั้งเดียวจบ ไม่ต้องแตะหน้าเว็บ GitHub (ไฟล์แค่ ~2MB ต่อรุ่น)
+    $relDir = Join-Path $PosRoot 'releases'
+    if (-not (Test-Path -LiteralPath $relDir)) { New-Item -ItemType Directory -Path $relDir -Force | Out-Null }
+    Copy-Item -LiteralPath $zipPath -Destination (Join-Path $relDir $zipName) -Force
+    $zipUrl = "https://raw.githubusercontent.com/$repoSlug/main/releases/$zipName"
+    Write-Host "  ก๊อป zip เข้า releases\ แล้ว (push ขึ้น repo ได้เลย)" -ForegroundColor DarkGray
+
+    # เก็บไฟล์ในรีโปแค่ 3 รุ่นล่าสุด ไม่งั้นรีโปบวมเรื่อย ๆ
+    Get-ChildItem -LiteralPath $relDir -Filter 'pos-update-*.zip' |
+        Sort-Object LastWriteTime -Descending | Select-Object -Skip 3 |
+        ForEach-Object {
+            Remove-Item -LiteralPath $_.FullName -Force
+            Write-Host "  ลบรุ่นเก่า $($_.Name)" -ForegroundColor DarkGray
+        }
+} else {
+    $zipUrl = "<<ใส่ลิงก์ไฟล์ zip ตรงนี้>>"
+}
 
 $latest = [ordered]@{
     version  = $Version
@@ -194,9 +216,16 @@ Write-Host "  [OK] latest.json" -ForegroundColor Green
 Write-Host "       sha256 = $zipHash" -ForegroundColor DarkGray
 Write-Host ''
 Write-Host "  อยู่ที่ $OutDir" -ForegroundColor White
-if (-not $ZipUrlBase) {
-    Write-Host ''
-    Write-Host '  อย่าลืมแก้ค่า "zip" ใน latest.json ให้เป็นลิงก์จริงก่อนอัปโหลด' -ForegroundColor Yellow
-    Write-Host '  (หรือรันซ้ำพร้อม -ZipUrlBase "https://github.com/USER/REPO/releases/download")' -ForegroundColor DarkGray
+Write-Host ''
+if ($ZipUrlBase) {
+    Write-Host '  ขั้นต่อไป: อัปโหลด zip เข้า GitHub Releases (tag = v' -NoNewline -ForegroundColor Yellow
+    Write-Host "$Version) แล้ว push latest.json" -ForegroundColor Yellow
+} elseif ($repoSlug) {
+    Write-Host '  ขั้นต่อไป — push ขึ้น GitHub แล้วเครื่องร้านจะเห็นอัพเดททันที:' -ForegroundColor White
+    Write-Host '     git add -A' -ForegroundColor DarkGray
+    Write-Host "     git commit -m `"release $Version`"" -ForegroundColor DarkGray
+    Write-Host '     git push' -ForegroundColor DarkGray
+} else {
+    Write-Host '  ยังไม่ได้ตั้ง git remote — แก้ค่า "zip" ใน latest.json เองก่อนอัปโหลด' -ForegroundColor Yellow
 }
 Write-Host ''
