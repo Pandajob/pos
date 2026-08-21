@@ -1,0 +1,663 @@
+<?php
+
+/**
+ * SchemaSnapshot.php — โครงสร้างฐานข้อมูลต้นแบบ (สร้างอัตโนมัติ ห้ามแก้มือ)
+ * สร้างโดย app/Database/generate_snapshot.php เมื่อ 2026-07-03 08:42:45
+ */
+
+return array (
+  'generated_at' => '2026-07-03 08:42:45',
+  'database' => 'pos_db',
+  'tables' => 
+  array (
+    'cash_movements' => 
+    array (
+      'create' => 'CREATE TABLE `cash_movements` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `session_id` int(10) unsigned NOT NULL,
+  `type` enum(\'cash_in\',\'cash_out\',\'sale\',\'refund\',\'void\') NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `note` varchar(255) DEFAULT NULL,
+  `created_by` int(10) unsigned NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `ip_address` varchar(45) DEFAULT NULL,
+  `reference_id` int(11) DEFAULT NULL COMMENT \'sale id ???????????????\',
+  PRIMARY KEY (`id`),
+  KEY `idx_session` (`session_id`),
+  CONSTRAINT `cash_movements_ibfk_1` FOREIGN KEY (`session_id`) REFERENCES `cash_sessions` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci',
+      'columns' => 
+      array (
+        'id' => '`id` int(10) unsigned NOT NULL AUTO_INCREMENT',
+        'session_id' => '`session_id` int(10) unsigned NOT NULL',
+        'type' => '`type` enum(\'cash_in\',\'cash_out\',\'sale\',\'refund\',\'void\') NOT NULL',
+        'amount' => '`amount` decimal(10,2) NOT NULL',
+        'note' => '`note` varchar(255) DEFAULT NULL',
+        'created_by' => '`created_by` int(10) unsigned NOT NULL',
+        'created_at' => '`created_at` datetime NOT NULL DEFAULT current_timestamp()',
+        'ip_address' => '`ip_address` varchar(45) DEFAULT NULL',
+        'reference_id' => '`reference_id` int(11) DEFAULT NULL COMMENT \'sale id ???????????????\'',
+      ),
+      'order' => 
+      array (
+        0 => 'id',
+        1 => 'session_id',
+        2 => 'type',
+        3 => 'amount',
+        4 => 'note',
+        5 => 'created_by',
+        6 => 'created_at',
+        7 => 'ip_address',
+        8 => 'reference_id',
+      ),
+    ),
+    'cash_sessions' => 
+    array (
+      'create' => 'CREATE TABLE `cash_sessions` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `opened_by` int(10) unsigned NOT NULL,
+  `opened_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `starting_cash` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `closed_by` int(10) unsigned DEFAULT NULL,
+  `closed_at` datetime DEFAULT NULL,
+  `closing_cash` decimal(10,2) DEFAULT NULL,
+  `expected_cash` decimal(10,2) DEFAULT NULL COMMENT \'???????? starting + movements\',
+  `difference` decimal(10,2) DEFAULT NULL COMMENT \'closing - expected\',
+  `note` text DEFAULT NULL,
+  `status` enum(\'open\',\'closed\') NOT NULL DEFAULT \'open\',
+  PRIMARY KEY (`id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_opened_by` (`opened_by`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci',
+      'columns' => 
+      array (
+        'id' => '`id` int(10) unsigned NOT NULL AUTO_INCREMENT',
+        'opened_by' => '`opened_by` int(10) unsigned NOT NULL',
+        'opened_at' => '`opened_at` datetime NOT NULL DEFAULT current_timestamp()',
+        'starting_cash' => '`starting_cash` decimal(10,2) NOT NULL DEFAULT 0.00',
+        'closed_by' => '`closed_by` int(10) unsigned DEFAULT NULL',
+        'closed_at' => '`closed_at` datetime DEFAULT NULL',
+        'closing_cash' => '`closing_cash` decimal(10,2) DEFAULT NULL',
+        'expected_cash' => '`expected_cash` decimal(10,2) DEFAULT NULL COMMENT \'???????? starting + movements\'',
+        'difference' => '`difference` decimal(10,2) DEFAULT NULL COMMENT \'closing - expected\'',
+        'note' => '`note` text DEFAULT NULL',
+        'status' => '`status` enum(\'open\',\'closed\') NOT NULL DEFAULT \'open\'',
+      ),
+      'order' => 
+      array (
+        0 => 'id',
+        1 => 'opened_by',
+        2 => 'opened_at',
+        3 => 'starting_cash',
+        4 => 'closed_by',
+        5 => 'closed_at',
+        6 => 'closing_cash',
+        7 => 'expected_cash',
+        8 => 'difference',
+        9 => 'note',
+        10 => 'status',
+      ),
+    ),
+    'credit_payments' => 
+    array (
+      'create' => 'CREATE TABLE `credit_payments` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `sale_id` int(11) unsigned NOT NULL,
+  `member_id` int(11) unsigned DEFAULT NULL,
+  `amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `method` varchar(20) NOT NULL DEFAULT \'cash\',
+  `note` varchar(255) DEFAULT NULL,
+  `received_by` varchar(100) DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `sale_id` (`sale_id`),
+  KEY `member_id` (`member_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
+      'columns' => 
+      array (
+        'id' => '`id` int(11) unsigned NOT NULL AUTO_INCREMENT',
+        'sale_id' => '`sale_id` int(11) unsigned NOT NULL',
+        'member_id' => '`member_id` int(11) unsigned DEFAULT NULL',
+        'amount' => '`amount` decimal(12,2) NOT NULL DEFAULT 0.00',
+        'method' => '`method` varchar(20) NOT NULL DEFAULT \'cash\'',
+        'note' => '`note` varchar(255) DEFAULT NULL',
+        'received_by' => '`received_by` varchar(100) DEFAULT NULL',
+        'created_at' => '`created_at` datetime DEFAULT NULL',
+      ),
+      'order' => 
+      array (
+        0 => 'id',
+        1 => 'sale_id',
+        2 => 'member_id',
+        3 => 'amount',
+        4 => 'method',
+        5 => 'note',
+        6 => 'received_by',
+        7 => 'created_at',
+      ),
+    ),
+    'customer_tiers' => 
+    array (
+      'create' => 'CREATE TABLE `customer_tiers` (
+  `id` tinyint(3) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `discount_pct` decimal(5,2) NOT NULL DEFAULT 0.00,
+  `is_wholesale` tinyint(1) NOT NULL DEFAULT 0,
+  `badge_color` varchar(20) NOT NULL DEFAULT \'#6b7280\',
+  `description` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_tier_name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
+      'columns' => 
+      array (
+        'id' => '`id` tinyint(3) unsigned NOT NULL AUTO_INCREMENT',
+        'name' => '`name` varchar(50) NOT NULL',
+        'discount_pct' => '`discount_pct` decimal(5,2) NOT NULL DEFAULT 0.00',
+        'is_wholesale' => '`is_wholesale` tinyint(1) NOT NULL DEFAULT 0',
+        'badge_color' => '`badge_color` varchar(20) NOT NULL DEFAULT \'#6b7280\'',
+        'description' => '`description` varchar(255) DEFAULT NULL',
+      ),
+      'order' => 
+      array (
+        0 => 'id',
+        1 => 'name',
+        2 => 'discount_pct',
+        3 => 'is_wholesale',
+        4 => 'badge_color',
+        5 => 'description',
+      ),
+    ),
+    'members' => 
+    array (
+      'create' => 'CREATE TABLE `members` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `tier_id` tinyint(3) unsigned NOT NULL DEFAULT 1,
+  `code` varchar(20) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `address` text DEFAULT NULL,
+  `tax_id` varchar(50) DEFAULT NULL,
+  `points` int(11) NOT NULL DEFAULT 0,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  `deleted_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_member_code` (`code`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
+      'columns' => 
+      array (
+        'id' => '`id` int(11) NOT NULL AUTO_INCREMENT',
+        'tier_id' => '`tier_id` tinyint(3) unsigned NOT NULL DEFAULT 1',
+        'code' => '`code` varchar(20) NOT NULL',
+        'name' => '`name` varchar(255) NOT NULL',
+        'phone' => '`phone` varchar(20) DEFAULT NULL',
+        'address' => '`address` text DEFAULT NULL',
+        'tax_id' => '`tax_id` varchar(50) DEFAULT NULL',
+        'points' => '`points` int(11) NOT NULL DEFAULT 0',
+        'created_at' => '`created_at` datetime DEFAULT NULL',
+        'updated_at' => '`updated_at` datetime DEFAULT NULL',
+        'deleted_at' => '`deleted_at` datetime DEFAULT NULL',
+      ),
+      'order' => 
+      array (
+        0 => 'id',
+        1 => 'tier_id',
+        2 => 'code',
+        3 => 'name',
+        4 => 'phone',
+        5 => 'address',
+        6 => 'tax_id',
+        7 => 'points',
+        8 => 'created_at',
+        9 => 'updated_at',
+        10 => 'deleted_at',
+      ),
+    ),
+    'products' => 
+    array (
+      'create' => 'CREATE TABLE `products` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `barcode` varchar(100) DEFAULT NULL,
+  `price` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `wholesale_price` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `cost` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `stock` int(11) NOT NULL DEFAULT 0,
+  `category` varchar(100) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  `deleted_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_barcode` (`barcode`)
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
+      'columns' => 
+      array (
+        'id' => '`id` int(11) NOT NULL AUTO_INCREMENT',
+        'name' => '`name` varchar(255) NOT NULL',
+        'barcode' => '`barcode` varchar(100) DEFAULT NULL',
+        'price' => '`price` decimal(10,2) NOT NULL DEFAULT 0.00',
+        'wholesale_price' => '`wholesale_price` decimal(10,2) NOT NULL DEFAULT 0.00',
+        'cost' => '`cost` decimal(10,2) NOT NULL DEFAULT 0.00',
+        'stock' => '`stock` int(11) NOT NULL DEFAULT 0',
+        'category' => '`category` varchar(100) DEFAULT NULL',
+        'description' => '`description` text DEFAULT NULL',
+        'created_at' => '`created_at` datetime DEFAULT NULL',
+        'updated_at' => '`updated_at` datetime DEFAULT NULL',
+        'deleted_at' => '`deleted_at` datetime DEFAULT NULL',
+      ),
+      'order' => 
+      array (
+        0 => 'id',
+        1 => 'name',
+        2 => 'barcode',
+        3 => 'price',
+        4 => 'wholesale_price',
+        5 => 'cost',
+        6 => 'stock',
+        7 => 'category',
+        8 => 'description',
+        9 => 'created_at',
+        10 => 'updated_at',
+        11 => 'deleted_at',
+      ),
+    ),
+    'quotation_items' => 
+    array (
+      'create' => 'CREATE TABLE `quotation_items` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `quotation_id` int(10) unsigned NOT NULL,
+  `product_id` int(10) unsigned DEFAULT NULL,
+  `product_name` varchar(300) NOT NULL,
+  `barcode` varchar(100) DEFAULT \'\',
+  `price` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `quantity` int(11) NOT NULL DEFAULT 1,
+  `subtotal` decimal(12,2) NOT NULL DEFAULT 0.00,
+  PRIMARY KEY (`id`),
+  KEY `idx_quotation_id` (`quotation_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
+      'columns' => 
+      array (
+        'id' => '`id` int(10) unsigned NOT NULL AUTO_INCREMENT',
+        'quotation_id' => '`quotation_id` int(10) unsigned NOT NULL',
+        'product_id' => '`product_id` int(10) unsigned DEFAULT NULL',
+        'product_name' => '`product_name` varchar(300) NOT NULL',
+        'barcode' => '`barcode` varchar(100) DEFAULT \'\'',
+        'price' => '`price` decimal(10,2) NOT NULL DEFAULT 0.00',
+        'quantity' => '`quantity` int(11) NOT NULL DEFAULT 1',
+        'subtotal' => '`subtotal` decimal(12,2) NOT NULL DEFAULT 0.00',
+      ),
+      'order' => 
+      array (
+        0 => 'id',
+        1 => 'quotation_id',
+        2 => 'product_id',
+        3 => 'product_name',
+        4 => 'barcode',
+        5 => 'price',
+        6 => 'quantity',
+        7 => 'subtotal',
+      ),
+    ),
+    'quotations' => 
+    array (
+      'create' => 'CREATE TABLE `quotations` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `quote_number` varchar(30) NOT NULL,
+  `customer_name` varchar(200) NOT NULL DEFAULT \'\',
+  `customer_address` text DEFAULT NULL,
+  `customer_tax_id` varchar(30) DEFAULT \'\',
+  `customer_phone` varchar(30) DEFAULT \'\',
+  `subtotal` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `discount_pct` decimal(5,2) NOT NULL DEFAULT 0.00,
+  `discount_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `total_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `note` text DEFAULT NULL,
+  `status` enum(\'pending\',\'confirmed\',\'cancelled\') NOT NULL DEFAULT \'pending\',
+  `sale_id` int(10) unsigned DEFAULT NULL,
+  `created_by` varchar(100) DEFAULT \'\',
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_quote_number` (`quote_number`),
+  KEY `idx_status` (`status`),
+  KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
+      'columns' => 
+      array (
+        'id' => '`id` int(10) unsigned NOT NULL AUTO_INCREMENT',
+        'quote_number' => '`quote_number` varchar(30) NOT NULL',
+        'customer_name' => '`customer_name` varchar(200) NOT NULL DEFAULT \'\'',
+        'customer_address' => '`customer_address` text DEFAULT NULL',
+        'customer_tax_id' => '`customer_tax_id` varchar(30) DEFAULT \'\'',
+        'customer_phone' => '`customer_phone` varchar(30) DEFAULT \'\'',
+        'subtotal' => '`subtotal` decimal(12,2) NOT NULL DEFAULT 0.00',
+        'discount_pct' => '`discount_pct` decimal(5,2) NOT NULL DEFAULT 0.00',
+        'discount_amount' => '`discount_amount` decimal(12,2) NOT NULL DEFAULT 0.00',
+        'total_amount' => '`total_amount` decimal(12,2) NOT NULL DEFAULT 0.00',
+        'note' => '`note` text DEFAULT NULL',
+        'status' => '`status` enum(\'pending\',\'confirmed\',\'cancelled\') NOT NULL DEFAULT \'pending\'',
+        'sale_id' => '`sale_id` int(10) unsigned DEFAULT NULL',
+        'created_by' => '`created_by` varchar(100) DEFAULT \'\'',
+        'created_at' => '`created_at` datetime DEFAULT current_timestamp()',
+        'updated_at' => '`updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()',
+      ),
+      'order' => 
+      array (
+        0 => 'id',
+        1 => 'quote_number',
+        2 => 'customer_name',
+        3 => 'customer_address',
+        4 => 'customer_tax_id',
+        5 => 'customer_phone',
+        6 => 'subtotal',
+        7 => 'discount_pct',
+        8 => 'discount_amount',
+        9 => 'total_amount',
+        10 => 'note',
+        11 => 'status',
+        12 => 'sale_id',
+        13 => 'created_by',
+        14 => 'created_at',
+        15 => 'updated_at',
+      ),
+    ),
+    'return_items' => 
+    array (
+      'create' => 'CREATE TABLE `return_items` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `return_id` int(10) unsigned NOT NULL,
+  `sale_item_id` int(10) unsigned NOT NULL,
+  `product_id` int(10) unsigned NOT NULL,
+  `product_name` varchar(255) NOT NULL,
+  `unit_price` decimal(10,2) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `refund_amount` decimal(10,2) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_ritems_return` (`return_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
+      'columns' => 
+      array (
+        'id' => '`id` int(10) unsigned NOT NULL AUTO_INCREMENT',
+        'return_id' => '`return_id` int(10) unsigned NOT NULL',
+        'sale_item_id' => '`sale_item_id` int(10) unsigned NOT NULL',
+        'product_id' => '`product_id` int(10) unsigned NOT NULL',
+        'product_name' => '`product_name` varchar(255) NOT NULL',
+        'unit_price' => '`unit_price` decimal(10,2) NOT NULL',
+        'quantity' => '`quantity` int(11) NOT NULL',
+        'refund_amount' => '`refund_amount` decimal(10,2) NOT NULL',
+      ),
+      'order' => 
+      array (
+        0 => 'id',
+        1 => 'return_id',
+        2 => 'sale_item_id',
+        3 => 'product_id',
+        4 => 'product_name',
+        5 => 'unit_price',
+        6 => 'quantity',
+        7 => 'refund_amount',
+      ),
+    ),
+    'returns' => 
+    array (
+      'create' => 'CREATE TABLE `returns` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `return_number` varchar(30) NOT NULL,
+  `sale_id` int(10) unsigned NOT NULL,
+  `cashier` varchar(255) NOT NULL DEFAULT \'Admin\',
+  `reason` varchar(500) NOT NULL,
+  `total_refund` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `status` enum(\'pending\',\'approved\',\'rejected\') NOT NULL DEFAULT \'pending\',
+  `note` text DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_return_number` (`return_number`),
+  KEY `idx_returns_sale` (`sale_id`),
+  KEY `idx_returns_status` (`status`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
+      'columns' => 
+      array (
+        'id' => '`id` int(10) unsigned NOT NULL AUTO_INCREMENT',
+        'return_number' => '`return_number` varchar(30) NOT NULL',
+        'sale_id' => '`sale_id` int(10) unsigned NOT NULL',
+        'cashier' => '`cashier` varchar(255) NOT NULL DEFAULT \'Admin\'',
+        'reason' => '`reason` varchar(500) NOT NULL',
+        'total_refund' => '`total_refund` decimal(10,2) NOT NULL DEFAULT 0.00',
+        'status' => '`status` enum(\'pending\',\'approved\',\'rejected\') NOT NULL DEFAULT \'pending\'',
+        'note' => '`note` text DEFAULT NULL',
+        'created_at' => '`created_at` datetime NOT NULL DEFAULT current_timestamp()',
+        'updated_at' => '`updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()',
+      ),
+      'order' => 
+      array (
+        0 => 'id',
+        1 => 'return_number',
+        2 => 'sale_id',
+        3 => 'cashier',
+        4 => 'reason',
+        5 => 'total_refund',
+        6 => 'status',
+        7 => 'note',
+        8 => 'created_at',
+        9 => 'updated_at',
+      ),
+    ),
+    'sale_items' => 
+    array (
+      'create' => 'CREATE TABLE `sale_items` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `sale_id` int(11) NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `product_name` varchar(255) NOT NULL,
+  `barcode` varchar(100) DEFAULT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `subtotal` decimal(10,2) NOT NULL,
+  `created_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_sale_id` (`sale_id`),
+  KEY `fk_product_id` (`product_id`),
+  CONSTRAINT `fk_si_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`),
+  CONSTRAINT `fk_si_sale` FOREIGN KEY (`sale_id`) REFERENCES `sales` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
+      'columns' => 
+      array (
+        'id' => '`id` int(11) NOT NULL AUTO_INCREMENT',
+        'sale_id' => '`sale_id` int(11) NOT NULL',
+        'product_id' => '`product_id` int(11) NOT NULL',
+        'product_name' => '`product_name` varchar(255) NOT NULL',
+        'barcode' => '`barcode` varchar(100) DEFAULT NULL',
+        'price' => '`price` decimal(10,2) NOT NULL',
+        'quantity' => '`quantity` int(11) NOT NULL',
+        'subtotal' => '`subtotal` decimal(10,2) NOT NULL',
+        'created_at' => '`created_at` datetime DEFAULT NULL',
+      ),
+      'order' => 
+      array (
+        0 => 'id',
+        1 => 'sale_id',
+        2 => 'product_id',
+        3 => 'product_name',
+        4 => 'barcode',
+        5 => 'price',
+        6 => 'quantity',
+        7 => 'subtotal',
+        8 => 'created_at',
+      ),
+    ),
+    'sales' => 
+    array (
+      'create' => 'CREATE TABLE `sales` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `bill_number` varchar(50) NOT NULL,
+  `total_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `subtotal` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `discount_pct` decimal(5,2) NOT NULL DEFAULT 0.00,
+  `discount_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `paid_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `change_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `payment_method` varchar(20) NOT NULL DEFAULT \'cash\',
+  `credit_settled_at` datetime DEFAULT NULL,
+  `cashier` varchar(100) NOT NULL DEFAULT \'Admin\',
+  `member_id` int(11) DEFAULT NULL,
+  `member_name` varchar(255) DEFAULT NULL,
+  `member_tier` varchar(50) DEFAULT NULL,
+  `note` text DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  `voided_at` datetime DEFAULT NULL,
+  `void_reason` varchar(255) DEFAULT NULL,
+  `points_used` int(11) NOT NULL DEFAULT 0,
+  `points_discount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_bill_number` (`bill_number`)
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
+      'columns' => 
+      array (
+        'id' => '`id` int(11) NOT NULL AUTO_INCREMENT',
+        'bill_number' => '`bill_number` varchar(50) NOT NULL',
+        'total_amount' => '`total_amount` decimal(10,2) NOT NULL DEFAULT 0.00',
+        'subtotal' => '`subtotal` decimal(10,2) NOT NULL DEFAULT 0.00',
+        'discount_pct' => '`discount_pct` decimal(5,2) NOT NULL DEFAULT 0.00',
+        'discount_amount' => '`discount_amount` decimal(10,2) NOT NULL DEFAULT 0.00',
+        'paid_amount' => '`paid_amount` decimal(10,2) NOT NULL DEFAULT 0.00',
+        'change_amount' => '`change_amount` decimal(10,2) NOT NULL DEFAULT 0.00',
+        'payment_method' => '`payment_method` varchar(20) NOT NULL DEFAULT \'cash\'',
+        'credit_settled_at' => '`credit_settled_at` datetime DEFAULT NULL',
+        'cashier' => '`cashier` varchar(100) NOT NULL DEFAULT \'Admin\'',
+        'member_id' => '`member_id` int(11) DEFAULT NULL',
+        'member_name' => '`member_name` varchar(255) DEFAULT NULL',
+        'member_tier' => '`member_tier` varchar(50) DEFAULT NULL',
+        'note' => '`note` text DEFAULT NULL',
+        'created_at' => '`created_at` datetime DEFAULT NULL',
+        'updated_at' => '`updated_at` datetime DEFAULT NULL',
+        'voided_at' => '`voided_at` datetime DEFAULT NULL',
+        'void_reason' => '`void_reason` varchar(255) DEFAULT NULL',
+        'points_used' => '`points_used` int(11) NOT NULL DEFAULT 0',
+        'points_discount' => '`points_discount` decimal(10,2) NOT NULL DEFAULT 0.00',
+      ),
+      'order' => 
+      array (
+        0 => 'id',
+        1 => 'bill_number',
+        2 => 'total_amount',
+        3 => 'subtotal',
+        4 => 'discount_pct',
+        5 => 'discount_amount',
+        6 => 'paid_amount',
+        7 => 'change_amount',
+        8 => 'payment_method',
+        9 => 'credit_settled_at',
+        10 => 'cashier',
+        11 => 'member_id',
+        12 => 'member_name',
+        13 => 'member_tier',
+        14 => 'note',
+        15 => 'created_at',
+        16 => 'updated_at',
+        17 => 'voided_at',
+        18 => 'void_reason',
+        19 => 'points_used',
+        20 => 'points_discount',
+      ),
+    ),
+    'settings' => 
+    array (
+      'create' => 'CREATE TABLE `settings` (
+  `key` varchar(100) NOT NULL,
+  `value` text DEFAULT NULL,
+  PRIMARY KEY (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
+      'columns' => 
+      array (
+        'key' => '`key` varchar(100) NOT NULL',
+        'value' => '`value` text DEFAULT NULL',
+      ),
+      'order' => 
+      array (
+        0 => 'key',
+        1 => 'value',
+      ),
+    ),
+    'stock_logs' => 
+    array (
+      'create' => 'CREATE TABLE `stock_logs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `product_id` int(11) NOT NULL,
+  `product_name` varchar(255) NOT NULL,
+  `type` enum(\'in\',\'out\',\'adjust\') NOT NULL,
+  `qty_before` int(11) NOT NULL DEFAULT 0,
+  `qty_change` int(11) NOT NULL,
+  `qty_after` int(11) NOT NULL DEFAULT 0,
+  `note` varchar(255) DEFAULT NULL,
+  `created_by` varchar(100) DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_product` (`product_id`),
+  KEY `idx_created` (`created_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci',
+      'columns' => 
+      array (
+        'id' => '`id` int(11) NOT NULL AUTO_INCREMENT',
+        'product_id' => '`product_id` int(11) NOT NULL',
+        'product_name' => '`product_name` varchar(255) NOT NULL',
+        'type' => '`type` enum(\'in\',\'out\',\'adjust\') NOT NULL',
+        'qty_before' => '`qty_before` int(11) NOT NULL DEFAULT 0',
+        'qty_change' => '`qty_change` int(11) NOT NULL',
+        'qty_after' => '`qty_after` int(11) NOT NULL DEFAULT 0',
+        'note' => '`note` varchar(255) DEFAULT NULL',
+        'created_by' => '`created_by` varchar(100) DEFAULT NULL',
+        'created_at' => '`created_at` datetime NOT NULL DEFAULT current_timestamp()',
+      ),
+      'order' => 
+      array (
+        0 => 'id',
+        1 => 'product_id',
+        2 => 'product_name',
+        3 => 'type',
+        4 => 'qty_before',
+        5 => 'qty_change',
+        6 => 'qty_after',
+        7 => 'note',
+        8 => 'created_by',
+        9 => 'created_at',
+      ),
+    ),
+    'users' => 
+    array (
+      'create' => 'CREATE TABLE `users` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `username` varchar(100) NOT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `full_name` varchar(255) NOT NULL,
+  `role` enum(\'admin\',\'cashier\') NOT NULL DEFAULT \'cashier\',
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_username` (`username`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
+      'columns' => 
+      array (
+        'id' => '`id` int(10) unsigned NOT NULL AUTO_INCREMENT',
+        'username' => '`username` varchar(100) NOT NULL',
+        'password_hash' => '`password_hash` varchar(255) NOT NULL',
+        'full_name' => '`full_name` varchar(255) NOT NULL',
+        'role' => '`role` enum(\'admin\',\'cashier\') NOT NULL DEFAULT \'cashier\'',
+        'is_active' => '`is_active` tinyint(1) NOT NULL DEFAULT 1',
+        'created_at' => '`created_at` datetime NOT NULL DEFAULT current_timestamp()',
+      ),
+      'order' => 
+      array (
+        0 => 'id',
+        1 => 'username',
+        2 => 'password_hash',
+        3 => 'full_name',
+        4 => 'role',
+        5 => 'is_active',
+        6 => 'created_at',
+      ),
+    ),
+  ),
+);

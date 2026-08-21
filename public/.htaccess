@@ -1,0 +1,85 @@
+# Disable directory browsing
+Options -Indexes
+
+# ----------------------------------------------------------------------
+# Rewrite engine
+# ----------------------------------------------------------------------
+
+# Turning on the rewrite engine is necessary for the following rules and features.
+# FollowSymLinks must be enabled for this to work.
+<IfModule mod_rewrite.c>
+	Options +FollowSymlinks
+	RewriteEngine On
+
+	# If you installed CodeIgniter in a subfolder, you will need to
+	# change the following line to match the subfolder you need.
+	# http://httpd.apache.org/docs/current/mod/mod_rewrite.html#rewritebase
+	RewriteBase /pos/public/
+
+	# Redirect Trailing Slashes...
+	RewriteCond %{REQUEST_FILENAME} !-d
+	RewriteCond %{REQUEST_URI} (.+)/$
+	RewriteRule ^ %1 [L,R=301]
+
+	# Rewrite "www.example.com -> example.com"
+	RewriteCond %{HTTPS} !=on
+	RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+	RewriteRule ^ http://%1%{REQUEST_URI} [R=301,L]
+
+	# Checks to see if the user is attempting to access a valid file,
+	# such as an image or css document, if this isn't true it sends the
+	# request to the front controller, index.php
+	RewriteCond %{REQUEST_FILENAME} !-f
+	RewriteCond %{REQUEST_FILENAME} !-d
+	RewriteRule ^([\s\S]*)$ index.php/$1 [L,NC,QSA]
+
+	# Ensure Authorization header is passed along
+	RewriteCond %{HTTP:Authorization} .
+	RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+</IfModule>
+
+<IfModule !mod_rewrite.c>
+	# If we don't have mod_rewrite installed, all 404's
+	# can be sent to index.php, and everything works as normal.
+	ErrorDocument 404 index.php
+</IfModule>
+
+# Disable server signature start
+ServerSignature Off
+# Disable server signature end
+
+# ----------------------------------------------------------------------
+# ประสิทธิภาพ — เครื่องปลายทางสเปคน้อย / เน็ตช้า
+# ----------------------------------------------------------------------
+
+# บีบอัดข้อความก่อนส่ง (CSS 230KB -> ~30KB) ลดเวลารอโหลดหน้าเว็บมาก
+# ต้องมีทั้ง mod_deflate และ mod_filter — ถ้าเครื่องไหนไม่ได้เปิดไว้ จะข้ามไปเฉย ๆ ไม่ error
+<IfModule mod_deflate.c>
+<IfModule mod_filter.c>
+	AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css
+	AddOutputFilterByType DEFLATE text/javascript application/javascript application/x-javascript
+	AddOutputFilterByType DEFLATE application/json image/svg+xml
+</IfModule>
+</IfModule>
+
+# ให้เบราว์เซอร์เก็บไฟล์ static ไว้ ไม่ต้องโหลดซ้ำทุกครั้งที่เปลี่ยนหน้า
+# หมายเหตุ: ถ้าเปลี่ยนไฟล์ใน public/assets/ ให้กด Ctrl+F5 ที่เครื่องร้าน 1 ครั้ง
+<IfModule mod_expires.c>
+	ExpiresActive On
+	ExpiresByType text/css                "access plus 30 days"
+	ExpiresByType application/javascript  "access plus 30 days"
+	ExpiresByType font/woff2              "access plus 1 year"
+	ExpiresByType font/woff               "access plus 1 year"
+	ExpiresByType image/png               "access plus 30 days"
+	ExpiresByType image/jpeg              "access plus 30 days"
+	ExpiresByType image/x-icon            "access plus 30 days"
+</IfModule>
+
+# กันไม่ให้ ETag ทำให้เบราว์เซอร์ยิงถาม server ซ้ำทุกไฟล์
+<IfModule mod_headers.c>
+	<FilesMatch "\.(css|js|woff2?|png|jpe?g|ico)$">
+		Header unset ETag
+		Header set Cache-Control "public, max-age=2592000"
+	</FilesMatch>
+</IfModule>
+FileETag None
