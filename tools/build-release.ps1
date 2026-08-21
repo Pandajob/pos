@@ -61,6 +61,34 @@ function Should-Skip ([string]$rel) {
     return $false
 }
 
+# ── อ่านชื่อ repo จาก git remote ─────────────────────────────────────────────
+# ต้องทำ "ก่อน" รวบรวมไฟล์ เพราะเราจะเขียน tools\update-source.txt
+# แล้วไฟล์นั้นต้องถูกแพ็คลงก้อนอัพเดทไปด้วย ไม่งั้นเครื่องร้านไม่รู้ว่าต้องไปเช็คที่ไหน
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+$repoSlug  = ''
+if (-not $ZipUrlBase) {
+    try {
+        Push-Location $PosRoot
+        $remote = (& git remote get-url origin 2>$null)
+        Pop-Location
+        if ($remote -and $remote -match 'github\.com[:/](?<owner>[^/]+)/(?<repo>[^/.\s]+)') {
+            # ตั้งแค่ repoSlug พอ — ห้ามตั้ง ZipUrlBase ที่นี่
+            # ไม่งั้นจะไปเข้าโหมด GitHub Releases (ที่ต้องอัปโหลดเอง) แทนโหมดวางไฟล์ในรีโป
+            $repoSlug = "$($Matches.owner)/$($Matches.repo)"
+        }
+    } catch { }
+}
+if ($repoSlug) {
+    $srcFile = Join-Path $PosRoot 'tools\update-source.txt'
+    $lines   = if (Test-Path -LiteralPath $srcFile) { [System.IO.File]::ReadAllText($srcFile) -split "`r?`n" } else { @() }
+    $hasUrl  = $lines | Where-Object { $_.Trim() -ne '' -and -not $_.Trim().StartsWith('#') }
+    if (-not $hasUrl) {
+        $rawUrl = "https://raw.githubusercontent.com/$repoSlug/main/latest.json"
+        [System.IO.File]::WriteAllText($srcFile, (($lines -join "`r`n").TrimEnd() + "`r`n" + $rawUrl + "`r`n"), $utf8NoBom)
+        Write-Host "  ตั้ง tools\update-source.txt -> $rawUrl" -ForegroundColor DarkGray
+    }
+}
+
 Write-Host ''
 Write-Host "  สร้าง package เวอร์ชัน $Version" -ForegroundColor White
 Write-Host "  จาก $PosRoot" -ForegroundColor DarkGray
@@ -101,7 +129,6 @@ foreach ($f in $picked) {
     Copy-Item -LiteralPath $f.Full -Destination $dest -Force
 }
 
-$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 $manifestObj = [ordered]@{
     version  = $Version
     built    = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
@@ -133,27 +160,11 @@ $zipMB   = [math]::Round((Get-Item -LiteralPath $zipPath).Length / 1MB, 2)
 
 # ── latest.json — ไฟล์ที่เครื่องร้านจะมาเช็ค ─────────────────────────────────
 
-# ถ้าไม่ได้สั่ง -ZipUrlBase มา ให้เดาจาก git remote origin เอง
-# จะได้ไม่ต้องมานั่งพิมพ์ลิงก์เองทุกครั้ง (และไม่พิมพ์ผิดจนเครื่องร้านโดน 404)
-$repoSlug = ''
-if (-not $ZipUrlBase) {
-    try {
-        Push-Location $PosRoot
-        $remote = (& git remote get-url origin 2>$null)
-        Pop-Location
-        if ($remote -and $remote -match 'github\.com[:/](?<owner>[^/]+)/(?<repo>[^/.\s]+)') {
-            # ตั้งแค่ repoSlug พอ — ห้ามตั้ง ZipUrlBase ที่นี่
-            # ไม่งั้นจะไปเข้าโหมด GitHub Releases (ที่ต้องอัปโหลดเอง) แทนโหมดวางไฟล์ในรีโป
-            $repoSlug = "$($Matches.owner)/$($Matches.repo)"
-            Write-Host "  อ่าน repo จาก git remote: $repoSlug" -ForegroundColor DarkGray
-        }
-    } catch { }
-}
-
 if ($ZipUrlBase) {
     # โหมด GitHub Releases — ต้องอัปโหลดไฟล์ zip เองที่หน้าเว็บ
     $zipUrl = "$($ZipUrlBase.TrimEnd('/'))/v$Version/$zipName"
 } elseif ($repoSlug) {
+    Write-Host "  repo: $repoSlug" -ForegroundColor DarkGray
     # โหมดปกติ: ก๊อป zip เข้าโฟลเดอร์ releases\ ในรีโปเลย
     # push ครั้งเดียวจบ ไม่ต้องแตะหน้าเว็บ GitHub (ไฟล์แค่ ~2MB ต่อรุ่น)
     $relDir = Join-Path $PosRoot 'releases'
@@ -198,17 +209,6 @@ $latest = [ordered]@{
     $utf8NoBom
 )
 
-# เติม URL ให้ tools\update-source.txt อัตโนมัติ ถ้ายังไม่ได้ตั้งไว้
-if ($repoSlug) {
-    $srcFile = Join-Path $PosRoot 'tools\update-source.txt'
-    $lines   = if (Test-Path -LiteralPath $srcFile) { [System.IO.File]::ReadAllText($srcFile) -split "`r?`n" } else { @() }
-    $hasUrl  = $lines | Where-Object { $_.Trim() -ne '' -and -not $_.Trim().StartsWith('#') }
-    if (-not $hasUrl) {
-        $rawUrl = "https://raw.githubusercontent.com/$repoSlug/main/latest.json"
-        [System.IO.File]::WriteAllText($srcFile, (($lines -join "`r`n").TrimEnd() + "`r`n" + $rawUrl + "`r`n"), $utf8NoBom)
-        Write-Host "  ตั้ง tools\update-source.txt ให้แล้ว -> $rawUrl" -ForegroundColor DarkGray
-    }
-}
 
 Write-Host ''
 Write-Host "  [OK] $zipName  ($zipMB MB, $($picked.Count) ไฟล์)" -ForegroundColor Green
