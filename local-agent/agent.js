@@ -212,8 +212,11 @@ function sendSerial(data) {
 }
 
 // ── ส่งคำสั่งตาม printer type ─────────────────────────────────────────────────
-async function openDrawer() {
+async function openDrawer(printerName) {
   const cmd = buildOpenDrawerCmd(CFG.drawerPin, CFG.pulseOn, CFG.pulseOff);
+  // ระบุชื่อเครื่องมาจากหน้าเว็บ → ยิงตรงผ่าน Windows spooler เลย
+  // (กันกรณี config ยังไม่มี windowsName แล้วลิ้นชักไม่เด้ง)
+  if (printerName) return sendWindows(cmd, printerName);
   switch (CFG.printer.type) {
     case 'network': return sendNetwork(cmd);
     case 'windows': return sendWindows(cmd);
@@ -410,10 +413,10 @@ app.post('/print', async (req, res) => {
 
 /** เปิดลิ้นชัก */
 app.post('/open-drawer', async (req, res) => {
-  const { triggeredBy = 'unknown', reason = '' } = req.body;
-  console.log(`[agent] open-drawer | by: ${triggeredBy} | reason: ${reason} | ${new Date().toLocaleString('th-TH')}`);
+  const { triggeredBy = 'unknown', reason = '', printerName = '' } = req.body;
+  console.log(`[agent] open-drawer | by: ${triggeredBy} | reason: ${reason} | printer: ${printerName || '(config)'} | ${new Date().toLocaleString('th-TH')}`);
   try {
-    const result = await openDrawer();
+    const result = await openDrawer(printerName);
     console.log('[agent] drawer opened:', result);
     res.json({ ok: true, result });
   } catch (err) {
