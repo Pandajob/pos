@@ -1,8 +1,8 @@
 {
-    "version":  "2026.08.21.6",
-    "released":  "2026-08-22",
-    "notes":  "เอกสารติดตั้งเครื่องร้าน",
-    "zip":  "https://raw.githubusercontent.com/Pandajob/pos/main/releases/pos-update-2026.08.21.6.zip",
-    "sha256":  "580b2743f6b135f0e64dcb5b24f4b2be3897f463ac0457f9335b5a0a60791996",
+    "version":  "2026.08.30.1",
+    "released":  "2026-08-30",
+    "notes":  "สลิป 80mm บอกประเภทการชำระเงิน (เงินสด/เงินโอน/เงินเชื่อ) + แก้ลิ้นชักไม่เปิดตอนพิมพ์สลิป",
+    "zip":  "https://raw.githubusercontent.com/Pandajob/pos/main/releases/pos-update-2026.08.30.1.zip",
+    "sha256":  "b6e11bb99f6bed0c845f67b9d628986c07d94aa965adc8249b190bfd86372b7d",
     "count":  868
 }
