@@ -786,6 +786,9 @@ function printDeliveryNote() {
 
 
 function printCompactReceipt() {
+  // เบราว์เซอร์สั่งเปิดลิ้นชักเองไม่ได้ — ฝากให้ Local Agent เด้งให้ (ถ้ารันอยู่)
+  // ทำให้พิมพ์สลิป 80mm ทางเบราว์เซอร์ก็ยังเปิดลิ้นชักได้เหมือนพิมพ์ผ่าน Agent
+  if (typeof kickDrawerViaAgent === 'function') kickDrawerViaAgent();
   <?php
     $slip80DiscAmt   = (float)($sale['discount_amount'] ?? 0);
     $slip80DiscPct   = (float)($sale['discount_pct']    ?? 0);
@@ -794,6 +797,14 @@ function printCompactReceipt() {
     $slip80HasReduc  = $slip80DiscAmt > 0 || $slip80PtsDisc > 0;
     $slip80SubBefore = $sale['total_amount'] + $slip80DiscAmt + $slip80PtsDisc;
     $slip80EarnedPts = $rcCreditUnsettled ? 0 : (int) floor($sale['total_amount'] / $shopPointsRate);
+    // ประเภทการชำระเงิน — แสดงบนสลิป 80mm ให้ชัดว่าบิลนี้เป็นเงินสด/เงินโอน/เงินเชื่อ
+    $slip80Pm     = $sale['payment_method'] ?? 'cash';
+    $slip80PmText = [
+      'cash'     => 'เงินสด',
+      'qr'       => 'เงินโอน (QR/พร้อมเพย์)',
+      'transfer' => 'เงินโอน',
+      'credit'   => 'เงินเชื่อ',
+    ][$slip80Pm] ?? $slip80Pm;
   ?>
   let itemRows80 = '';
   <?php foreach ($items as $item): ?>
@@ -892,6 +903,10 @@ function printCompactReceipt() {
   <?php endif; ?>
 </table>
 <div class="sep"></div>
+<div class="center" style="font-size:<?= $fsTotal ?>px; font-weight:900">
+  ชำระโดย: <?= $slip80PmText ?><?= $slip80Pm === 'credit' && !$creditPaidUp ? ' (ค้างชำระ)' : '' ?>
+</div>
+<div class="sep"></div>
 <div class="footer-txt">ขอบคุณที่ใช้บริการ</div>
 <div class="footer-txt">กรุณาเก็บใบเสร็จไว้เป็นหลักฐาน</div>
 <script>
@@ -985,6 +1000,10 @@ function printCompactReceipt() {
     <?php endif; ?>
   </table>
   <div style="border-top:1px dashed #000; margin:4px 0"></div>
+  <div style="font-size:<?= $fsTotal ?>px; font-weight:900; text-align:center">
+    ชำระโดย: <?= $slip80PmText ?><?= $slip80Pm === 'credit' && !$creditPaidUp ? ' (ค้างชำระ)' : '' ?>
+  </div>
+  <div style="border-top:1px dashed #000; margin:4px 0"></div>
   <div style="font-size:<?= $fsFooter ?>px; text-align:center">ขอบคุณที่ใช้บริการ</div>
   <div style="font-size:<?= $fsFooter ?>px; text-align:center">กรุณาเก็บใบเสร็จไว้เป็นหลักฐาน</div>
 </div>
@@ -1054,19 +1073,30 @@ function slipToast(msg, ok) {
   setTimeout(() => toast.remove(), 3000);
 }
 
+// เด้งลิ้นชักผ่าน Agent — ใช้ร่วมกันทั้งพิมพ์ผ่าน Agent และพิมพ์ผ่านเบราว์เซอร์
+// ส่งชื่อเครื่องพิมพ์ไปด้วยเสมอ เพื่อไม่ต้องพึ่ง config.json ของ agent (ที่อาจยังว่าง)
+function kickDrawerViaAgent() {
+  if (!OPEN_DRAWER) return Promise.resolve();
+  return fetch(`http://127.0.0.1:${AGENT_PORT}/open-drawer`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Agent-Token': AGENT_TOKEN },
+    body: JSON.stringify({ triggeredBy: 'receipt', reason: 'พิมพ์สลิป 80mm', printerName: resolvedPrinter() || undefined }),
+    signal: AbortSignal.timeout(10000),
+  }).catch(() => { /* เปิดลิ้นชักไม่ได้ ไม่ควร block การพิมพ์ */ });
+}
+
 async function sendSlipToPrinter(printerName, copies) {
   // เด้งลิ้นชัก 2 ทางพร้อมกัน (ทางไหนถึงก่อนลิ้นชักก็เปิด — สั่งซ้ำตอนลิ้นชักเปิดอยู่ไม่มีผลอะไร):
   // 1) คำสั่งแยก /open-drawer (เส้นทางเดียวกับปุ่ม "เปิดลิ้นชัก") — ใช้ได้แม้ agent เวอร์ชันเก่า/ตัว .exe
   // 2) ฝาก openDrawer ไปกับงานพิมพ์ใบแรก — สำรองกรณี /open-drawer ล้ม (เช่น config ใน agent ชี้ผิดเครื่อง)
   if (OPEN_DRAWER) {
-    try {
-      await fetch(`http://127.0.0.1:${AGENT_PORT}/open-drawer`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Agent-Token': AGENT_TOKEN },
-        body: JSON.stringify({ triggeredBy: 'receipt', reason: 'pop with slip print' }),
-        signal: AbortSignal.timeout(10000),
-      });
-    } catch (e) { /* เปิดลิ้นชักไม่ได้ ไม่ควร block การพิมพ์สลิป — ยังมี kick ในงานพิมพ์เป็นสำรอง */ }
+    // ส่งชื่อเครื่องที่กำลังจะพิมพ์ไปด้วย — ลิ้นชักต่ออยู่กับเครื่องนั้น
+    await fetch(`http://127.0.0.1:${AGENT_PORT}/open-drawer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Agent-Token': AGENT_TOKEN },
+      body: JSON.stringify({ triggeredBy: 'receipt', reason: 'pop with slip print', printerName: printerName || undefined }),
+      signal: AbortSignal.timeout(10000),
+    }).catch(() => { /* เปิดลิ้นชักไม่ได้ ไม่ควร block การพิมพ์สลิป — ยังมี kick ในงานพิมพ์เป็นสำรอง */ });
   }
   const el = document.getElementById('slip-agent');
   const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#ffffff', logging: false });
